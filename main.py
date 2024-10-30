@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 from typing import Union
 from pydantic import BaseModel
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
     
@@ -13,108 +15,20 @@ class State(BaseModel):
     nickname: str
     governor: str
     deputy: str
-    LGA: list
-
-my_states = [
-            {
-         "name": "Lagos",
-         "id": 1,
-         "capital": "Ikeja",
-         "population": 35000000,
-         "nickname": "Centre of Excellence",
-         "governor": "Babajide Sanwo-Olu",
-         "deputy": "Femi Hamzat"
-    },
-    {    "name": "Ogun",
-         "id": 2,
-         "capital": "Abeokuta",
-         "population": 6379500,
-         "nickname": "Gateway State",
-         "governor": "Dapo Abiodun",
-         "deputy": "Noimot Salako-Oyedele"
-    },
-    {
-        "name": "Kano",
-        "id": 3,
-        "capital": "Kano",
-        "population": 13740000,
-        "nickname": "Center of Commerce",
-        "governor": "Abdullahi Umar Ganduje",
-        "deputy": "Nasiru Yusuf Gawuna"
-    },
-    {
-        "name": "Kaduna",
-        "id": 4,
-        "capital": "Kaduna",
-        "population": 8272000,
-        "nickname": "Centre of Learning",
-        "governor": "Nasir Ahmad el-Rufai",
-        "deputy": "Hadiza Sabuwa Balarabe"
-    },
-    {
-        "name": "Oyo",
-        "id": 5,
-        "capital": "Ibadan",
-        "population": 7810000,
-        "nickname": "Pace Setter State",
-        "governor": "Seyi Makinde",
-        "deputy": "Rauf Olaniyan"
-    },
-    {
-        "name": "Rivers",
-        "id": 6,
-        "capital": "Port Harcourt",
-        "population": 7395000,
-        "nickname": "Treasure Base of the Nation",
-        "governor": "Nyesom Wike",
-        "deputy": "Ipalibo Banigo"
-    },
-    {
-        "name": "Katsina",
-        "id": 7,
-        "capital": "Katsina",
-        "population": 6611000,
-        "nickname": "Home of Hospitality",
-        "governor": "Aminu Bello Masari",
-        "deputy": "Mannir Yakubu"
-    },
-    {
-        "name": "Bauchi",
-        "id": 8,
-        "capital": "Bauchi",
-        "population": 6537000,
-        "nickname": "Pearl of Tourism",
-        "governor": "Bala Mohammed",
-        "deputy": "Baba Tela"
-    },
-    {
-        "name": "Anambra",
-        "id": 9,
-        "capital": "Awka",
-        "population": 5612000,
-        "nickname": "Light of the Nation",
-        "governor": "Willie Obiano",
-        "deputy": "Nkem Okeke"
-    },
-    {
-        "name": "Jigawa",
-        "id": 10,
-        "capital": "Dutse",
-        "population": 5442000,
-        "nickname": "The New World",
-        "governor": "Muhammad Badaru Abubakar",
-        "deputy": "Umar Namadi"
-    },
-    {
-        "name": "Benue",
-        "id": 11,
-        "capital": "Makurdi",
-        "population": 5316000,
-        "nickname": "Food Basket of the Nation",
-        "governor": "Samuel Ortom",
-        "deputy": "Benson Abounu"
-    }
-    ]
+    LGA: List[str] 
+ 
+ states_data = [
+    State(id=1, name="Lagos", capital="Ikeja", population=14600000, nickname="Centre of Excellence", governor="Babajide Sanwo-Olu", deputy="Femi Hamzat", LGA=["Ikeja", "Alimosho", "Eti-Osa", "Surulere", "Mushin"]),
+    State(id=2, name="Kano", capital="Kano", population=13400000, nickname="Centre of Commerce", governor="Abdullahi Ganduje", deputy="Nasiru Gawuna", LGA=["Fagge", "Dala", "Nasarawa", "Gwale", "Kumbotso"]),
+    State(id=3, name="Kaduna", capital="Kaduna", population=9500000, nickname="Centre of Learning", governor="Nasir El-Rufai", deputy="Hadiza Balarabe", LGA=["Chikun", "Giwa", "Igabi", "Kaduna North", "Kaduna South"]),
+    State(id=4, name="Rivers", capital="Port Harcourt", population=8000000, nickname="Treasure Base", governor="Nyesom Wike", deputy="Ipalibo Banigo", LGA=["Obio-Akpor", "Eleme", "Ikwerre", "Okrika", "Oyigbo"]),
+    State(id=5, name="Oyo", capital="Ibadan", population=7800000, nickname="Pace Setter State", governor="Seyi Makinde", deputy="Rauf Olaniyan", LGA=["Ibadan North", "Ibadan South-West", "Oyo East", "Afijio", "Ogbomosho North"]),
+    State(id=6, name="Katsina", capital="Katsina", population=7600000, nickname="Home of Hospitality", governor="Aminu Masari", deputy="Mannir Yakubu", LGA=["Bakori", "Batagarawa", "Batsari", "Danja", "Dutsin-Ma"]),
+    State(id=7, name="Bauchi", capital="Bauchi", population=6900000, nickname="Pearl of Tourism", governor="Bala Mohammed", deputy="Baba Tela", LGA=["Bauchi", "Bogoro", "Darazo", "Dass", "Ganjuwa"]),
+    State(id=8, name="Anambra", capital="Awka", population=6300000, nickname="Light of the Nation", governor="Willie Obiano", deputy="Nkem Okeke", LGA=["Awka North", "Awka South", "Anambra East", "Anambra West", "Anaocha"]),
+    State(id=9, name="Jigawa", capital="Dutse", population=5800000, nickname="New World", governor="Muhammad Badaru", deputy="Umar Namadi", LGA=["Auyo", "Babura", "Biriniwa", "Birnin Kudu", "Buji"]),
+    State(id=10, name="Benue", capital="Makurdi", population=5700000, nickname="Food Basket of the Nation", governor="Samuel Ortom", deputy="Benson Abounu", LGA=["Gboko", "Guma", "Gwer East", "Gwer West", "Katsina-Ala"]),
+]
 
 def find_state(id):
     for state in my_states:
