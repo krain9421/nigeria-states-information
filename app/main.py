@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
-    
+templates = Jinja2Templates(directory="templates")   
 
 class State(BaseModel):
     name: str
@@ -45,9 +45,13 @@ def find_index_state(id):
         if p['id'] == id:
             return i
 
-@app.get("/")
-def read_root():
-    return "Welcome to Nigeria States Information API!"
+@app.get("/", response_class=HTMLResponse)
+def read_root(request: Request):
+    """
+    Returns the index page for the API
+    """
+    # return "Welcome to Nigeria States Information API!"
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/states")
 def get_states():
