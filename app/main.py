@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from typing import Union
+from typing import Union, List
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -15,9 +15,10 @@ class State(BaseModel):
     nickname: str
     governor: str
     deputy: str
+    id: int
     LGA: List[str] 
  
- states_data = [
+states_data = [
     State(id=1, name="Lagos", capital="Ikeja", population=14600000, nickname="Centre of Excellence", governor="Babajide Sanwo-Olu", deputy="Femi Hamzat", LGA=["Ikeja", "Alimosho", "Eti-Osa", "Surulere", "Mushin"]),
     State(id=2, name="Kano", capital="Kano", population=13400000, nickname="Centre of Commerce", governor="Abdullahi Ganduje", deputy="Nasiru Gawuna", LGA=["Fagge", "Dala", "Nasarawa", "Gwale", "Kumbotso"]),
     State(id=3, name="Kaduna", capital="Kaduna", population=9500000, nickname="Centre of Learning", governor="Nasir El-Rufai", deputy="Hadiza Balarabe", LGA=["Chikun", "Giwa", "Igabi", "Kaduna North", "Kaduna South"]),
@@ -31,9 +32,18 @@ class State(BaseModel):
 ]
 
 def find_state(id):
-    for state in my_states:
-        if str(state["id"]) == id:
+    for state in states_data:
+        #if str(state["id"]) == id:
+        if state.id == id:
             return state
+
+def find_index_state(id):
+    """
+    Get the index of a state that corresponds to id
+    """
+    for i, p in enumerate(states_data):
+        if p['id'] == id:
+            return i
 
 @app.get("/")
 def read_root():
@@ -47,12 +57,41 @@ def get_states():
     return {"data": my_states}
 
 @app.get("/states/{id}")
-def get_state(id):
+def get_state(id: int):
     """
-    Get a state based on the id
+    Get a state that corresponds to the index
     """
     state = find_state(id)
+    if not state: # Raise 404 exception if state not found
+        raise HTTPException(status_code=404, detail=f"state with id: {id} was not found")
     return {"state": state}
+
+@app.delete("/states/{id}", status_code=204)
+def delete_state(id: int):
+    """
+    Delete a state that corresponds to the index
+    """
+    index = find_index_state(id)
+
+    if index == None:
+        raise HTTPException(status_code=404, detail=f"state with id: {id} was not found")
+
+    my_states.pop(index)
+    return Response(status_code=204)
+
+@app.put("/states/{id}")
+def update_state(id: int, state: State):
+    """
+    Update a state that corresponds to the index
+    """
+    index = find_index_state(id)
+
+    if index == None:
+        raise HTTPException(status_code=404, detail=f"state with id: {id} was not found")
+    state_dict = state.dict() # Store the state as a dict
+    state_dict['id'] = id # Update the state id
+    my_states[index] = state_dict # Overwrite the state
+    return {'message': "updated state"}
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: Union[str, None] = None):
