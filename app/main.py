@@ -4,6 +4,9 @@ from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+import psycopg2
+import time
+from psycopg2.extras import RealDictCursor
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")   
@@ -30,6 +33,18 @@ states_data = [
     State(id=9, name="Jigawa", capital="Dutse", population=5800000, nickname="New World", governor="Muhammad Badaru", deputy="Umar Namadi", LGA=["Auyo", "Babura", "Biriniwa", "Birnin Kudu", "Buji"]),
     State(id=10, name="Benue", capital="Makurdi", population=5700000, nickname="Food Basket of the Nation", governor="Samuel Ortom", deputy="Benson Abounu", LGA=["Gboko", "Guma", "Gwer East", "Gwer West", "Katsina-Ala"]),
 ]
+
+# Setting up connection to database
+while True:
+    try:
+        conn = psycopg2.connect(host, database, user, password, cursor_factory=RealDictCursor)
+        cursor = conn.cursor()
+        print("Database connection successful!")
+        break
+    except Exception as error:
+        print("Database connection failed!")
+        print("Error: ", error)
+        time.sleep(2) # Retry connecting after 2 seconds
 
 def find_state(id):
     for state in states_data:
